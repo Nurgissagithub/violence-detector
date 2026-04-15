@@ -1,4 +1,4 @@
-# # Violence Detection in Videos
+# Violence Detection in Videos
 
 Binary video classifier (Violence / NonViolence) built with PyTorch + EfficientNet-B0.
 
