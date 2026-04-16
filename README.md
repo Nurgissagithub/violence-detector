@@ -37,8 +37,6 @@ Binary video classifier (Violence / NonViolence) built with PyTorch + EfficientN
 
 ![Confusion Matrix](CM.png)
 
-## Real-world Testing
-
 ## Real-world Video Testing
 
 | Video         | Ground Truth | Prediction | Violence Probability |
