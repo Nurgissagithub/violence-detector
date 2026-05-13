@@ -97,6 +97,54 @@ Output example:
 }
 ```
 
+## FastAPI inference service
+
+The trained model is wrapped in a FastAPI service (`api.py`) that loads the
+weights once at startup and exposes two endpoints:
+
+| Method | Path       | Description                                              |
+| ------ | ---------- | -------------------------------------------------------- |
+| GET    | `/healthz` | Liveness check, returns device and config                |
+| POST   | `/predict` | Multipart upload of a video file, returns prediction JSON |
+
+### Run
+
+```bash
+pip install -r requirements.txt
+uvicorn api:app --host 0.0.0.0 --port 8000
+```
+
+Override defaults via environment variables:
+
+```bash
+WEIGHTS_PATH=models/violence_classifier.safetensors \
+NUM_FRAMES=16 \
+THRESHOLD=0.65 \
+uvicorn api:app --host 0.0.0.0 --port 8000
+```
+
+### Example
+
+```bash
+curl -X POST -F "video=@test.mp4" \
+     "http://localhost:8000/predict?threshold=0.65"
+```
+
+Response:
+
+```json
+{
+  "prediction": "Violence",
+  "threshold_used": 0.65,
+  "confidence": "0.9341",
+  "violence_prob": "0.9341",
+  "non_violence_prob": "0.0659",
+  "filename": "test.mp4"
+}
+```
+
+Interactive Swagger docs are available at `http://localhost:8000/docs`.
+
 ## Dataset
 
 [Real Life Violence Situations Dataset](https://www.kaggle.com/datasets/mohamedmustafa/real-life-violence-situations-dataset)  

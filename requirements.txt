@@ -4,3 +4,6 @@ safetensors==0.7.0
 opencv-python==4.13.0.92
 scikit-learn==1.6.1
 numpy==2.0.2
+fastapi>=0.110
+uvicorn[standard]>=0.27
+python-multipart>=0.0.9
