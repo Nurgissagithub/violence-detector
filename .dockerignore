@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+.git/
+.gitignore
+.pytest_cache/
+.venv/
+venv/
+env/
+test (3-5 videos)/
+.github/

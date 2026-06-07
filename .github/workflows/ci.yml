@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install CPU dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # CPU-only torch/vision keeps CI fast; no CUDA on runners.
+          pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+          pip install "fastapi>=0.110" "uvicorn[standard]>=0.27" \
+                      "python-multipart>=0.0.9" safetensors \
+                      opencv-python-headless pytest httpx \
+                      prometheus-client prometheus-fastapi-instrumentator
+
+      - name: Run tests
+        run: pytest -v

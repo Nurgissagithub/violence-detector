@@ -1,6 +1,22 @@
 # Violence Detection in Videos
 
+[![CI](https://github.com/Nurgissagithub/violence-detector/actions/workflows/ci.yml/badge.svg)](https://github.com/Nurgissagithub/violence-detector/actions/workflows/ci.yml)
+
 Binary video classifier (Violence / NonViolence) built with PyTorch + EfficientNet-B0.
+
+## Quickstart (Docker)
+
+```bash
+docker compose up --build
+```
+
+The API is then available at `http://localhost:8000` (Swagger UI at `/docs`).
+
+```bash
+curl -X POST -F "video=@test.mp4" "http://localhost:8000/predict?threshold=0.65"
+```
+
+> The trained weights at `models/violence_classifier.safetensors` are mounted into the container read-only via `docker-compose.yml`.
 
 ## Architecture
 
@@ -35,7 +51,7 @@ Binary video classifier (Violence / NonViolence) built with PyTorch + EfficientN
 
 ### Confusion Matrix
 
-![Confusion Matrix](CM.png)
+![Confusion Matrix](docs/CM.png)
 
 ## Real-world Video Testing
 
@@ -144,6 +160,49 @@ Response:
 ```
 
 Interactive Swagger docs are available at `http://localhost:8000/docs`.
+
+![Swagger /predict request form](docs/FastAPI_1.png)
+
+![Swagger /predict response](docs/FastAPI_2.png)
+
+## Tests
+
+API contract tests (endpoint presence, input validation, response shape) run
+without real weights or video decoding — model loading and inference are mocked,
+so the suite runs in seconds on CPU and in CI.
+
+```bash
+pip install pytest httpx
+pytest -v
+```
+
+CI runs the suite on Python 3.11 and 3.12 on every push and pull request
+(see `.github/workflows/ci.yml`).
+
+## Monitoring
+
+The API exposes Prometheus metrics at `GET /metrics`: standard HTTP metrics
+(request counts, latency histograms, in-progress requests) plus a custom
+`violence_predictions_total` counter labeled by predicted class.
+
+`docker compose up --build` brings up the full stack:
+
+| Service    | URL                     | Notes                              |
+|------------|-------------------------|------------------------------------|
+| API        | http://localhost:8000   | Swagger at `/docs`, metrics at `/metrics` |
+| Prometheus | http://localhost:9090   | Scrapes the API every 15s          |
+| Grafana    | http://localhost:3000   | Login `admin` / `admin`            |
+
+Grafana auto-provisions the Prometheus datasource and a "Violence Detector —
+Service Metrics" dashboard (request rate, p50/p95 latency, prediction breakdown)
+on startup — no manual setup. Send a few requests to `/predict`, then watch the
+panels populate.
+
+![Grafana dashboard](docs/Grafana.png)
+
+Prometheus scraping the API target:
+
+![Prometheus target up](docs/Prometheus.png)
 
 ## Dataset
 

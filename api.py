@@ -10,9 +10,18 @@ from typing import Any, Dict
 import torch
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from safetensors.torch import load_file
+from prometheus_client import Counter
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from dataset import build_transforms, sample_frames
 from model import ViolenceClassifier
+
+# Domain-specific metric: how many predictions of each class the service makes.
+PREDICTIONS = Counter(
+    "violence_predictions_total",
+    "Total predictions made, labeled by predicted class.",
+    ["prediction"],
+)
 
 # Configurable parameters (via environment variables)
 WEIGHTS_PATH = os.environ.get("WEIGHTS_PATH", "models/violence_classifier.safetensors")
@@ -53,6 +62,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Standard HTTP metrics (request counts, latency histograms, in-progress) + the custom counter above, exposed at GET /metrics for Prometheus.
+Instrumentator().instrument(app).expose(app, endpoint="/metrics")
+
 def _run_inference(video_path: str, threshold: float) -> Dict[str, Any]:
     model = STATE["model"]
     transform = STATE["transform"]
@@ -70,6 +82,8 @@ def _run_inference(video_path: str, threshold: float) -> Dict[str, Any]:
 
     violence_prob = probs[1].item()
     pred = 1 if violence_prob >= threshold else 0
+
+    PREDICTIONS.labels(prediction=LABELS[pred]).inc()
 
     return {
         "prediction": LABELS[pred],
