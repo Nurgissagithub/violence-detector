@@ -165,7 +165,7 @@ Interactive Swagger docs are available at `http://localhost:8000/docs`.
 
 ![Swagger /predict response](docs/FastAPI_2.png)
 
-## Tests
+## Tests & CI/CD
 
 API contract tests (endpoint presence, input validation, response shape) run
 without real weights or video decoding — model loading and inference are mocked,
@@ -176,8 +176,16 @@ pip install pytest httpx
 pytest -v
 ```
 
-CI runs the suite on Python 3.11 and 3.12 on every push and pull request
-(see `.github/workflows/ci.yml`).
+The GitHub Actions pipeline (`.github/workflows/ci.yml`) runs in two stages:
+
+- **CI** — runs the test suite on Python 3.11 and 3.12 on every push and pull request.
+- **CD** — on a push to `main` that passes tests, builds the Docker image and
+  publishes it to GitHub Container Registry (GHCR), tagged `latest` and with the
+  commit SHA. Pull requests are tested but not published.
+
+```bash
+docker pull ghcr.io/nurgissagithub/violence-detector:latest
+```
 
 ## Monitoring
 
